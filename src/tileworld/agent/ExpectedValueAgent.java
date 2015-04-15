@@ -39,8 +39,10 @@ public class ExpectedValueAgent extends TWAgent{
     private int distances[][][]=new int[moves.length][Parameters.yDimension][Parameters.xDimension]; //move, row, column
     private double expectedT[] = new double[(int)Parameters.endTime+1]; //The expected values of finding a tile
     private double expectedH[] = new double[(int)Parameters.endTime+1]; //The expected values of finding a hole
+    private double expectedO[] = new double[(int)Parameters.endTime+1]; //The expected values of finding an obstacle
     private final int INF=1000000000; // 10^9 a number big enough so that it will never be reached, yet it fits in a 32 bit int.
-    private final double fuelSafety=50; //The level of safety the agent has to determine where to go.
+    private double fuelSafety; //The level of safety the agent has to determine where to go.
+    private final double fuelSafetyHardLimit=20; // if the fuel reaches this level, we will go straight to the refueling station
     private boolean didSomething;
     private TWAgentBoundingMemoryComm bmemory;
     
@@ -98,6 +100,9 @@ public class ExpectedValueAgent extends TWAgent{
 
            // Cell is blocked, replan?
         }
+        
+        int opportunities = Math.min(this.getEnvironment().countCreatedHoles, this.getEnvironment().countCreatedTiles);
+        
     }
     
     private class Position { // TODO: Move to its own file, or not, it doesn't really matter
@@ -170,13 +175,17 @@ public class ExpectedValueAgent extends TWAgent{
         //double probAppear=0.0000266666;
         double probAppearT=bmemory.tileMean;
         double probAppearH=bmemory.holeMean;
+        double probAppearO=bmemory.obstacleMean;
         expectedH[0]=1.0;
         expectedT[0]=1.0;
+        expectedO[0]=1.0;
         for(int i=1; i<=Parameters.endTime; i++) {
             expectedT[i]=expectedT[i-1]*(1.0-probAppearT);
             if(i-lifeTime-1>=0) expectedT[i]+=expectedT[i-(int)lifeTime-1]*probAppearT;
             expectedH[i]=expectedH[i-1]*(1.0-probAppearH);
             if(i-lifeTime-1>=0) expectedH[i]+=expectedH[i-(int)lifeTime-1]*probAppearH;
+            expectedO[i]=expectedO[i-1]*(1.0-probAppearO);
+            if(i-lifeTime-1>=0) expectedO[i]+=expectedO[i-(int)lifeTime-1]*probAppearO;
         }
         
         Queue<Position> q=new LinkedList<Position>();
@@ -223,14 +232,19 @@ public class ExpectedValueAgent extends TWAgent{
         }
         average/=movesAvailable;
         
+        fuelSafety=3*bestFuel*bmemory.haxO/(25*bmemory.getSimulationTime());
+        
+        System.out.println(ID+" Fuel Safety: "+fuelSafety);
         //If the Agent can't reach the refueling (it knows the path is blocked), then make sure there is enough fuel, otherwise dont move.
         if(bestFuel==INF && this.x+this.y+fuelSafety <fuelLevel) {
             bestFuel=0;
+            fuelSafety=0;
         }
+        
         
         // Check if the agent should go refuel
         if(Parameters.endTime-this.bmemory.getSimulationTime()<=fuelLevel);
-        else if(fuelLevel<=fuelSafety||maxExpected<average*(bestFuel+fuelSafety)/(fuelLevel-fuelSafety)) { 
+        else if(fuelLevel<fuelSafetyHardLimit||fuelLevel<=fuelSafety||maxExpected<average*(bestFuel+fuelSafety)/(fuelLevel-fuelSafety)) { 
             dir=bestFuelId;
         }
         

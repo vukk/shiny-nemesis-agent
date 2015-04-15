@@ -61,6 +61,8 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
     protected double holeMean = 0;
     protected double obstacleMean = 0;
     
+    public double haxO = 0;
+    
 
     // Stores turn when a square was last observed. 0 means not observed.
     protected long[][] observed;
@@ -134,6 +136,11 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
             // [Parameters.defaultSensorRange, Parameters.defaultSensorRange]
             int gridX = objectXCoords.get(i) - me.getX() + Parameters.defaultSensorRange;
             int gridY = objectYCoords.get(i) - me.getY() + Parameters.defaultSensorRange;
+            
+            // MORE HAX
+            if(o instanceof TWObstacle)
+                haxO++;
+            // END HAX
 
             grid[gridX][gridY] = o;
         }
@@ -234,8 +241,8 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
         this.holeMean = (this.countHole/(double)this.explored)/(double)this.approxLifetime();
         this.obstacleMean = (this.countObstacle/(double)this.explored)/(double)this.approxLifetime();
         
-        System.out.println("tc: "+countTile+" hc: "+countHole+" oc: "+countObstacle);
-        System.out.println("explored: "+explored+" alt: "+this.approxLifetime());
+        //System.out.println("tc: "+countTile+" hc: "+countHole+" oc: "+countObstacle);
+        //System.out.println("explored: "+explored+" alt: "+this.approxLifetime());
         System.out.println("tile: "+tileMean+" hole: "+holeMean+" obstacle: "+obstacleMean);
 
         this.decayMemoryByBound();
@@ -274,7 +281,7 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
         return boundMax;
     }
     
-    private long approxLifetime() {
+    public long approxLifetime() {
         return (long) Math.round((this.getLifetimeMaxBound() + 9 * this.getLifetimeMinBound()) / 10.0);
     }
 
