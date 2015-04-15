@@ -17,9 +17,8 @@ public class EVCommunicator {
     private static EVMessage MessageFromFirst;
     private static EVMessage MessageFromSecond;
     
-    public static void put(String fromAgent, EVMessage m){
-        char c = fromAgent.charAt(0);
-        switch(c){
+    public static void put(String fromAgent, EVMessage m) {
+        switch(fromAgent.charAt(0)) {
             case 'F': MessageFromFirst = m;
                 break;
             case 'S': MessageFromSecond = m;
@@ -27,12 +26,18 @@ public class EVCommunicator {
         }
     }
     
-    public static EVMessage get(String toAgent){
-        char c = toAgent.charAt(0);
-        switch(c){
-            case 'F': return MessageFromSecond;
-            case 'S': return MessageFromFirst;
+    public static EVMessage get(String toAgent) {
+        EVMessage ret = null;
+        switch(toAgent.charAt(0)) {
+            case 'F':
+                ret = MessageFromSecond;
+                MessageFromSecond = null;
+                break;
+            case 'S':
+                ret = MessageFromFirst;
+                MessageFromFirst = null;
+                break;
         }
-        return null;
+        return ret;
     } 
 }
