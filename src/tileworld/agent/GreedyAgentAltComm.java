@@ -304,29 +304,25 @@ public class GreedyAgentAltComm extends TWAgent{
         //checking if object[0] is of type int[];
         
         if(contents!=null){
-        if(contents[0] instanceof int[]){
-            this.friendPos = (int[])contents[0];
-        }
-        else{
-            this.friendPos = null;
-        }
-        
-        if (contents[0] instanceof TWAgentPercept){
-            memory.updateMemory((TWAgentPercept)contents[0]);
-        }
-        
-        if (contents[1] instanceof TWAgentPercept){
-            memory.updateMemory((TWAgentPercept)contents[1]);
-        }
-        
-        if (contents[2] instanceof TWAgentPercept){
-            memory.updateMemory((TWAgentPercept)contents[2]);
-        }
-        }
-        
-           
+            if(contents[0] instanceof int[]){
+                this.friendPos = (int[])contents[0];
+            }
+            else{
+                this.friendPos = null;
+            }
 
-        
+            if (contents[0] instanceof TWAgentPercept){
+                memory.updateMemory((TWAgentPercept)contents[0]);
+            }
+
+            if (contents[1] instanceof TWAgentPercept){
+                memory.updateMemory((TWAgentPercept)contents[1]);
+            }
+
+            if (contents[2] instanceof TWAgentPercept){
+                memory.updateMemory((TWAgentPercept)contents[2]);
+            }
+        }
         return true;
     }
 

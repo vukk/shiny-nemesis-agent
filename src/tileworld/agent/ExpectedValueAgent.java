@@ -13,6 +13,7 @@ import tileworld.environment.TWEnvironment;
 import tileworld.environment.TWHole;
 import tileworld.environment.TWObject;
 import tileworld.environment.TWTile;
+import tileworld.agent.EVMessage;
 import tileworld.exceptions.CellBlockedException;
 
 /**
@@ -31,19 +32,24 @@ import tileworld.exceptions.CellBlockedException;
  */
 public class ExpectedValueAgent extends TWAgent{
     
+    private String ID;
+    private EVMessage message;
     private long lifeTime;
     private int moves[][]= {{1,0},{0,1},{-1,0},{0,-1}};
     private int distances[][][]=new int[moves.length][Parameters.yDimension][Parameters.xDimension]; //move, row, column
     private double expected[] = new double[(int)Parameters.endTime+1]; //The expected values of finding something usefull according to likeliness of a piece appearing or being there.
     private final int INF=1000000000; // 10^9 a number big enough so that it will never be reached, yet it fits in a 32 bit int.
     private final double fuelSafety=20; //The level of safety the agent has to determine where to go.
+    private boolean didSomething;
     
-    public ExpectedValueAgent(int xpos, int ypos, TWEnvironment env, double fuelLevel) {
+    public ExpectedValueAgent(int xpos, int ypos, TWEnvironment env, double fuelLevel, String ID) {
         super(xpos,ypos,env,fuelLevel);
-        this.memory = new TWAgentBoundingMemory(this, env.schedule, env.getxDimension(), env.getyDimension());
+        this.memory = new TWAgentBoundingMemoryComm(this, env.schedule, env.getxDimension(), env.getyDimension(), ID);
+        this.ID=ID;
     }
 
     protected TWThought think() {
+        didSomething=true;
         System.out.println("Simple Score: " + this.score);
         if(this.fuelLevel<Parameters.defaultFuelLevel && x==0 && y==0) { //If its standing in the refuelery and doesnt have full fuel
             return new TWThought(TWAction.REFUEL,TWDirection.Z);
@@ -59,6 +65,7 @@ public class ExpectedValueAgent extends TWAgent{
         if(this.carriedTiles.size()>0 && TWHole.class.isInstance(o)) { //If its standing on a hole and can drop a tile
             return new TWThought(TWAction.PUTDOWN,TWDirection.Z);
         } 
+        didSomething=false;
         return new TWThought(TWAction.MOVE,getSmartDirection());
     }
 
@@ -81,6 +88,7 @@ public class ExpectedValueAgent extends TWAgent{
                 refuel();
                 break;   
             }
+            this.sendMessage();
         }  catch (CellBlockedException ex) {
 
            // Cell is blocked, replan?
@@ -147,7 +155,7 @@ public class ExpectedValueAgent extends TWAgent{
          */
         
         //This formula should give better results
-        double probAppear=0.02;
+        double probAppear=0.0000266666;
         expected[0]=1.0;
         for(int i=1; i<=Parameters.endTime; i++) {
             expected[i]=expected[i-1]*(1.0-probAppear);
@@ -233,8 +241,13 @@ public class ExpectedValueAgent extends TWAgent{
         return direction;
     }
 
+    private void sendMessage() {
+        this.message = new EVMessage(x, y, didSomething);
+        EVCommunicator.put(getName(), this.message);
+    }
+    
     @Override
     public String getName() {
-        return "Expected Value Agent";
+        return ID+" Expected Value Agent";
     }
 }
