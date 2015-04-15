@@ -55,6 +55,11 @@ public class TWEnvironment extends SimState implements Steppable {
     private Bag holes;
     private Bag obstacles;
     private TWFuelStation fuelingStation;
+    
+    
+    public int countCreatedTiles = 0;
+    public int countCreatedHoles = 0;
+            
 
     public TWFuelStation getFuelingStation() {
         return fuelingStation;
@@ -113,9 +118,14 @@ public class TWEnvironment extends SimState implements Steppable {
 
     private void createTWObjects(double time) {
         try {
-
-            tiles.addAll(tileCreator.createTWObjects(time));
-            holes.addAll(holeCreator.createTWObjects(time));
+            Bag createdHoles = holeCreator.createTWObjects(time);
+            Bag createdTiles = tileCreator.createTWObjects(time);
+            
+            countCreatedHoles += createdHoles.numObjs;
+            countCreatedTiles += createdTiles.numObjs;
+            
+            tiles.addAll(createdTiles);
+            holes.addAll(createdHoles);
             obstacles.addAll(obstacleCreator.createTWObjects(time));
         } catch (IllegalAccessException e) {
             // TODO Auto-generated catch block

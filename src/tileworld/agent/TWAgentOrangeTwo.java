@@ -31,7 +31,7 @@ import tileworld.planners.TWPathStep;
  * Description:
  *
  */
-public class TWAgentOrange extends TWAgent {
+public class TWAgentOrangeTwo extends ExpectedValueAgent {
     
     protected AstarPathGenerator astar;
     protected TWAgentBoundingMemory bmem;
@@ -41,8 +41,8 @@ public class TWAgentOrange extends TWAgent {
     protected TWEntity target;
 
     //protected TWAgentBoundingMemory memory;
-    public TWAgentOrange(int xpos, int ypos, TWEnvironment env, double fuelLevel) {
-        super(xpos, ypos, env, fuelLevel);
+    public TWAgentOrangeTwo(int xpos, int ypos, TWEnvironment env, double fuelLevel, String agentCommTag) {
+        super(xpos, ypos, env, fuelLevel, agentCommTag);
         System.out.println("Initializing memory");
         //this.memory = new TWAgentWorkingMemory(this, env.schedule, env.getxDimension(), env.getyDimension());
         this.memory = new TWAgentBoundingMemory(this, env.schedule, env.getxDimension(), env.getyDimension());
@@ -55,6 +55,7 @@ public class TWAgentOrange extends TWAgent {
         this.curPlanLvl = Integer.MAX_VALUE;
     }
 
+    @Override
     protected TWThought think() {
         // prepare
         // reset plan when it has ended
@@ -91,20 +92,21 @@ public class TWAgentOrange extends TWAgent {
         }
         
         // lvl2, greedy
-        //if (this.approxLifetime() <= 30) {
+        if (this.approxLifetime() <= 35) {
             return this.greedyThink();
-        //}
+        }
         
         // lvl3, complicated
+        return super.think();
         
         // lvlX, just for development
         //return new TWThought(TWAction.MOVE, getRandomDirection());
     }
     
     // here because for each agent the best approximation could be different
-    //private long approxLifetime() {
-    //    return (long) Math.round((this.bmem.getLifetimeMaxBound() + 9 * this.bmem.getLifetimeMinBound()) / 10.0);
-    //}
+    private long approxLifetime() {
+        return (long) Math.round((this.bmem.getLifetimeMaxBound() + 9 * this.bmem.getLifetimeMinBound()) / 10.0);
+    }
 
     @Override
     protected void act(TWThought thought) {
