@@ -37,9 +37,10 @@ public class ExpectedValueAgent extends TWAgent{
     private long lifeTime;
     private int moves[][]= {{1,0},{0,1},{-1,0},{0,-1}};
     private int distances[][][]=new int[moves.length][Parameters.yDimension][Parameters.xDimension]; //move, row, column
-    private double expected[] = new double[(int)Parameters.endTime+1]; //The expected values of finding something usefull according to likeliness of a piece appearing or being there.
+    private double expectedT[] = new double[(int)Parameters.endTime+1]; //The expected values of finding a tile
+    private double expectedH[] = new double[(int)Parameters.endTime+1]; //The expected values of finding a hole
     private final int INF=1000000000; // 10^9 a number big enough so that it will never be reached, yet it fits in a 32 bit int.
-    private final double fuelSafety=20; //The level of safety the agent has to determine where to go.
+    private final double fuelSafety=50; //The level of safety the agent has to determine where to go.
     private boolean didSomething;
     private TWAgentBoundingMemoryComm bmemory;
     
@@ -51,8 +52,9 @@ public class ExpectedValueAgent extends TWAgent{
     }
 
     protected TWThought think() {
+        //System.out.println(this.ID+" is thinking.");
         didSomething=false;
-        System.out.println("Simple Score: " + this.score);
+        //System.out.println("Simple Score: " + this.score);
         if(this.fuelLevel<Parameters.defaultFuelLevel && x==0 && y==0) { //If its standing in the refuelery and doesnt have full fuel
             return new TWThought(TWAction.REFUEL,TWDirection.Z);
         }
@@ -112,17 +114,24 @@ public class ExpectedValueAgent extends TWAgent{
     
     private double getExpected(int row, int col, int dist) {
         double ret=0.0;
+        double sumP=this.bmemory.tileMean+this.bmemory.holeMean;
         int currentTime=(int)Math.round(this.bmemory.getSimulationTime());
+        ret=0;
         if(this.bmemory.objects[col][row]==null) { //Empty square
             int lastVisited=(int)(this.bmemory).getObservedTimeGrid()[col][row];
-            ret=1.0-expected[currentTime-lastVisited]; //The inverse since these are the probabilities of it being empty when the agent reaches it.
-            if(this.carriedTiles.size()>=3 || this.carriedTiles.isEmpty()) {
-                ret/=2.0;
+            if(this.carriedTiles.size()<3) {
+                ret+=(1.0-expectedT[currentTime-lastVisited]); //The inverse since these are the probabilities of it being empty when the agent reaches it.
+            }
+            if(!this.carriedTiles.isEmpty()) {
+                ret+=(1.0-expectedH[currentTime-lastVisited]); //The inverse since these are the probabilities of it being empty when the agent reaches it.
             }
         }
         else {
             TWObject o =(TWObject) this.bmemory.objects[col][row].getO();//get mem object
-            if((this.carriedTiles.size()<3 && TWTile.class.isInstance(o)) || (this.carriedTiles.size()>0 && TWHole.class.isInstance(o))) {
+            if((this.carriedTiles.size()<3 && TWTile.class.isInstance(o))) {
+                ret = 1.0;
+            }
+            if((this.carriedTiles.size()>0 && TWHole.class.isInstance(o))) {
                 ret = 1.0;
             }
         }
@@ -158,11 +167,16 @@ public class ExpectedValueAgent extends TWAgent{
          */
         
         //This formula should give better results
-        double probAppear=0.0000266666;
-        expected[0]=1.0;
+        //double probAppear=0.0000266666;
+        double probAppearT=bmemory.tileMean;
+        double probAppearH=bmemory.holeMean;
+        expectedH[0]=1.0;
+        expectedT[0]=1.0;
         for(int i=1; i<=Parameters.endTime; i++) {
-            expected[i]=expected[i-1]*(1.0-probAppear);
-            if(i-lifeTime-1>=0) expected[i]+=expected[i-(int)lifeTime-1]*probAppear;
+            expectedT[i]=expectedT[i-1]*(1.0-probAppearT);
+            if(i-lifeTime-1>=0) expectedT[i]+=expectedT[i-(int)lifeTime-1]*probAppearT;
+            expectedH[i]=expectedH[i-1]*(1.0-probAppearH);
+            if(i-lifeTime-1>=0) expectedH[i]+=expectedH[i-(int)lifeTime-1]*probAppearH;
         }
         
         Queue<Position> q=new LinkedList<Position>();
@@ -176,14 +190,12 @@ public class ExpectedValueAgent extends TWAgent{
             int newRow=y+moves[i][1];
             int newCol=x+moves[i][0];
             double curExpected=0.0;
-            int visitCount=0;
             if(validPos(newRow,newCol)) {
                 movesAvailable++;
                 Position pos= new Position(newRow,newCol);
                 q.add(pos); //Insert in the front of the queue
                 distances[i][newRow][newCol]=1;
                 while(q.peek()!=null) { 
-                    visitCount++;
                     Position front=q.peek(); //Get the front of the queue
                     q.remove(); //Pop front of the queue
                     curExpected+=getExpected(front.row, front.col, distances[i][front.row][front.col]); //Test with 1 and 2, in theory 1 should be better.
@@ -198,7 +210,7 @@ public class ExpectedValueAgent extends TWAgent{
                     }
                 }
             }
-            System.out.println("Dir: "+ i+" with value: "+curExpected + ", Visited: "+visitCount);
+            //System.out.println("Dir: "+ i+" with value: "+curExpected + ", Visited: "+visitCount);
             average+=curExpected;
             if(bestFuel>distances[i][0][0]) {
                 bestFuel=distances[i][0][0];
@@ -217,7 +229,8 @@ public class ExpectedValueAgent extends TWAgent{
         }
         
         // Check if the agent should go refuel
-        if(fuelLevel<=fuelSafety||maxExpected<average*(bestFuel+fuelSafety)/(fuelLevel-fuelSafety)) { 
+        if(Parameters.endTime-this.bmemory.getSimulationTime()<=fuelLevel);
+        else if(fuelLevel<=fuelSafety||maxExpected<average*(bestFuel+fuelSafety)/(fuelLevel-fuelSafety)) { 
             dir=bestFuelId;
         }
         

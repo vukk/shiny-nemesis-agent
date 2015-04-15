@@ -100,7 +100,9 @@ public class TWEnvironment extends SimState implements Steppable {
         //createAgent(new TestTWAgent(0, 0, this, Parameters.defaultFuelLevel), 2);
         //createAgent(new TWAgentOrange(0, 0, this, Parameters.defaultFuelLevel), 2);
         createAgent(new ExpectedValueAgent(0, 0, this, Parameters.defaultFuelLevel, "First"), 2);
-        createAgent(new ExpectedValueAgent(1, 1, this, Parameters.defaultFuelLevel, "Second"), 2);
+        createAgent(new ExpectedValueAgent(1, 1, this, Parameters.defaultFuelLevel, "Second"), 3);
+        //createAgent(new TWAgentOrange(0, 0, this, Parameters.defaultFuelLevel), 2);
+        //createAgent(new TWAgentOrange(1, 1, this, Parameters.defaultFuelLevel), 2);
 
 //      createAgent(new VaisaghAgent(1, 1, this, Parameters.defaultFuelLevel),3);
 //        

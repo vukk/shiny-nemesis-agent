@@ -52,8 +52,8 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
     
     protected String agentCommTag;
     
-    protected int countTile = 0;
-    protected int countHole = 0;
+    protected int countTile = 1;
+    protected int countHole = 1;
     protected int countObstacle = 0;
     protected int explored = 0;
     // approximations of means
@@ -98,8 +98,15 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
         // according to that!
         EVMessage msg = EVCommunicator.get(this.agentCommTag);
         // 
+        /*
+        if(msg == null) {
+            System.out.println(agentCommTag+" RCVMSG is null");
+        }
+        if(msg != null && !msg.destroy) {
+            System.out.println(agentCommTag+" RCVMSG set but destroy false");
+        }*/
         if(msg != null && msg.destroy) {
-            
+            //System.out.println(agentCommTag+" RecvMsg loc: " + msg.x + ", " + msg.y + ", destroy: " + msg.destroy);
             this.removeAgentPercept(msg.x, msg.y);
         }
 
@@ -131,7 +138,7 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
             grid[gridX][gridY] = o;
         }
 
-        System.out.println("updating memory, size " + memorySize + " low " + boundMin + " hi " + boundMax + " approx " + (long) Math.round((boundMax + 9 * boundMin) / 10.0));
+        //System.out.println("updating mem of " + agentCommTag + ", size " + memorySize + " low " + boundMin + " hi " + boundMax + " approx " + (long) Math.round((boundMax + 9 * boundMin) / 10.0) + " step " + this.getSimulationTime());
 
         // Loop over grids to notice differences
         for (int i = 0; i < sensorGridSize; i++) {
@@ -223,9 +230,13 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
             }
         }
         
-        this.tileMean = (this.countTile/this.explored)/this.approxLifetime();
-        this.holeMean = (this.countHole/this.explored)/this.approxLifetime();
-        this.obstacleMean = (this.countObstacle/this.explored)/this.approxLifetime();
+        this.tileMean = (this.countTile/(double)this.explored)/(double)this.approxLifetime();
+        this.holeMean = (this.countHole/(double)this.explored)/(double)this.approxLifetime();
+        this.obstacleMean = (this.countObstacle/(double)this.explored)/(double)this.approxLifetime();
+        
+        System.out.println("tc: "+countTile+" hc: "+countHole+" oc: "+countObstacle);
+        System.out.println("explored: "+explored+" alt: "+this.approxLifetime());
+        System.out.println("tile: "+tileMean+" hole: "+holeMean+" obstacle: "+obstacleMean);
 
         this.decayMemoryByBound();
 
@@ -298,7 +309,7 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
         // boundMin is an approximation and could be wrong, so fix it if needed
         if (boundMin > boundMax) {
             boundMin = boundMax;
-            System.out.println("pushing minbound down, simtime " + this.getSimulationTime() + " obsdiff " + inMem.getObsDiff() + " difference " + difference);
+            System.out.println("pushing minbound downof " + agentCommTag + ", simtime " + this.getSimulationTime() + " obsdiff " + inMem.getObsDiff() + " difference " + difference);
             System.out.println("Reason is " + inMem.getO().getClass() + " in " + envX + "," + envY + " observed " + observed[envX][envY]);
         }
     }
@@ -330,7 +341,7 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
 
     @Override
     public ObjectGrid2D getMemoryGrid() {
-        System.out.println("Somebody is fetching memoryGrid, class " + this.memoryGrid.getClass());
+        //System.out.println("Somebody is fetching memoryGrid, class " + this.memoryGrid.getClass());
         return this.memoryGrid;
     }
 }

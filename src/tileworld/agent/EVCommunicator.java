@@ -18,6 +18,7 @@ public class EVCommunicator {
     private static EVMessage MessageFromSecond;
     
     public static void put(String fromAgent, EVMessage m) {
+        //System.out.println(fromAgent+" SendMsg loc: " + m.x + ", " + m.y + ", destroy: " + m.destroy);
         switch(fromAgent.charAt(0)) {
             case 'F': MessageFromFirst = m;
                 break;
