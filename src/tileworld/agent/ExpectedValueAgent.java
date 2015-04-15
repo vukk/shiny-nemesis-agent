@@ -51,7 +51,7 @@ public class ExpectedValueAgent extends TWAgent{
     }
 
     protected TWThought think() {
-        didSomething=true;
+        didSomething=false;
         System.out.println("Simple Score: " + this.score);
         if(this.fuelLevel<Parameters.defaultFuelLevel && x==0 && y==0) { //If its standing in the refuelery and doesnt have full fuel
             return new TWThought(TWAction.REFUEL,TWDirection.Z);
@@ -60,13 +60,14 @@ public class ExpectedValueAgent extends TWAgent{
             return new TWThought(TWAction.MOVE,TWDirection.Z);
         }
         if(this.bmemory.objects[x][y]==null) return new TWThought(TWAction.MOVE,getSmartDirection());
+        didSomething=true;
         TWObject o = (TWObject) this.bmemory.objects[x][y].getO();//get mem object
         if(this.carriedTiles.size()<3 && TWTile.class.isInstance(o)) { //If its standing on a tile and can pick it up
             return new TWThought(TWAction.PICKUP,TWDirection.Z);
         }
         if(this.carriedTiles.size()>0 && TWHole.class.isInstance(o)) { //If its standing on a hole and can drop a tile
             return new TWThought(TWAction.PUTDOWN,TWDirection.Z);
-        } 
+        }
         didSomething=false;
         return new TWThought(TWAction.MOVE,getSmartDirection());
     }
