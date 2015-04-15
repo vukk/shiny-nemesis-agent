@@ -1,2 +1,2 @@
-# shiny-nemesis-agent
-New repo for Intelligent Agents project.
+# psychic-octo-agent
+cz4046-ia-mas
