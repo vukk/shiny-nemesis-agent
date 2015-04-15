@@ -44,7 +44,7 @@ public class ExpectedValueAgent extends TWAgent{
     private double fuelSafety; //The level of safety the agent has to determine where to go.
     private final double fuelSafetyHardLimit=20; // if the fuel reaches this level, we will go straight to the refueling station
     private boolean didSomething;
-    private TWAgentBoundingMemoryComm bmemory;
+    protected TWAgentBoundingMemoryComm bmemory;
     
     public ExpectedValueAgent(int xpos, int ypos, TWEnvironment env, double fuelLevel, String ID) {
         super(xpos,ypos,env,fuelLevel);
@@ -100,9 +100,6 @@ public class ExpectedValueAgent extends TWAgent{
 
            // Cell is blocked, replan?
         }
-        
-        int opportunities = Math.min(this.getEnvironment().countCreatedHoles, this.getEnvironment().countCreatedTiles);
-        
     }
     
     private class Position { // TODO: Move to its own file, or not, it doesn't really matter
