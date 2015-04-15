@@ -99,6 +99,7 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
         EVMessage msg = EVCommunicator.get(this.agentCommTag);
         // 
         if(msg != null && msg.destroy) {
+            
             this.removeAgentPercept(msg.x, msg.y);
         }
 
@@ -221,6 +222,10 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
                 observed[envX][envY] = (long) this.getSimulationTime();
             }
         }
+        
+        this.tileMean = (this.countTile/this.explored)/this.approxLifetime();
+        this.holeMean = (this.countHole/this.explored)/this.approxLifetime();
+        this.obstacleMean = (this.countObstacle/this.explored)/this.approxLifetime();
 
         this.decayMemoryByBound();
 
@@ -257,6 +262,10 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
     public long getLifetimeMaxBound() {
         return boundMax;
     }
+    
+    private long approxLifetime() {
+        return (long) Math.round((this.getLifetimeMaxBound() + 9 * this.getLifetimeMinBound()) / 10.0);
+    }
 
     public long[][] getObservedTimeGrid() {
         return observed;
@@ -264,11 +273,12 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
     
     @Override
     public void removeAgentPercept(int x, int y) {
+        if(objects[x][y] != null) {
+            this.memorySize--;
+        }
         // Remove from memory
         objects[x][y] = null;
         memoryGrid.set(x, y, null);
-
-        this.memorySize--;
     }
 
     private void checkMinBound(int envX, int envY, TWAgentPercept inMem) {
