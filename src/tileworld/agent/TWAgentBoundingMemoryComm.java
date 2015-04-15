@@ -131,7 +131,7 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
             grid[gridX][gridY] = o;
         }
 
-        System.out.println("updating memory, size " + memorySize + " low " + boundMin + " hi " + boundMax + " approx " + (long) Math.round((boundMax + 9 * boundMin) / 10.0));
+        System.out.println("updating mem of " + agentCommTag + ", size " + memorySize + " low " + boundMin + " hi " + boundMax + " approx " + (long) Math.round((boundMax + 9 * boundMin) / 10.0));
 
         // Loop over grids to notice differences
         for (int i = 0; i < sensorGridSize; i++) {
@@ -298,7 +298,7 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
         // boundMin is an approximation and could be wrong, so fix it if needed
         if (boundMin > boundMax) {
             boundMin = boundMax;
-            System.out.println("pushing minbound down, simtime " + this.getSimulationTime() + " obsdiff " + inMem.getObsDiff() + " difference " + difference);
+            System.out.println("pushing minbound downof " + agentCommTag + ", simtime " + this.getSimulationTime() + " obsdiff " + inMem.getObsDiff() + " difference " + difference);
             System.out.println("Reason is " + inMem.getO().getClass() + " in " + envX + "," + envY + " observed " + observed[envX][envY]);
         }
     }
@@ -330,7 +330,7 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
 
     @Override
     public ObjectGrid2D getMemoryGrid() {
-        System.out.println("Somebody is fetching memoryGrid, class " + this.memoryGrid.getClass());
+        //System.out.println("Somebody is fetching memoryGrid, class " + this.memoryGrid.getClass());
         return this.memoryGrid;
     }
 }
