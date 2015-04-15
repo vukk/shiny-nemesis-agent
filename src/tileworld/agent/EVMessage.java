@@ -10,24 +10,11 @@ package tileworld.agent;
  * @author Vidur
  */
 public class EVMessage {
-    
-    
     public int[] location;
     public int[] cleared;
-    
-    //private TWAgentPercept obj1;
-    //private TWAgentPercept obj2;
-    //private TWAgentPercept obj3;
     
     public EVMessage(int[] location, int[] cleared) { // location, request, response
         this.location = location;
         this.cleared = cleared;
     }
-    
-    /*public Object[] getContents(){
-        Object[] contents = new Object[3];
-        return contents;
-    }*/
-            
-        
 }
