@@ -1,40 +1,25 @@
 /*
- * To change this template, choose Tools | Templates
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package tileworld.agent;
 
-import sim.engine.Schedule;
 import tileworld.Parameters;
 import tileworld.environment.TWDirection;
+import tileworld.environment.TWEntity;
 import tileworld.environment.TWEnvironment;
 import tileworld.environment.TWHole;
 import tileworld.environment.TWTile;
-import tileworld.environment.TWEntity;
 import tileworld.exceptions.CellBlockedException;
-import tileworld.agent.TWAgentWorkingMemory;
-import tileworld.agent.TWAgent;
-import tileworld.agent.TWThought;
 import tileworld.planners.AstarPathGenerator;
 import tileworld.planners.TWPath;
 
-
 /**
- * TWContextBuilder
  *
- * @author michaellees
- * Created: Feb 6, 2011
- *
- * Copyright michaellees Expression year is undefined on line 16, column 24 in Templates/Classes/Class.java.
- *
- *
- * Description:
- *
+ * @author SRIPORNA
  */
-public class GreedyAgentCommMinDist extends TWAgent{
-    
-    
+public class GreedyAgentAltComm extends TWAgent{
     int threshold = 10;
     private TWEntity target;
     private AstarPathGenerator planner;
@@ -43,7 +28,7 @@ public class GreedyAgentCommMinDist extends TWAgent{
     private Message messageRec;
     private String agentName;
 
-    public GreedyAgentCommMinDist(int xpos, int ypos, TWEnvironment env, double fuelLevel, String agentName) {
+    public GreedyAgentAltComm(int xpos, int ypos, TWEnvironment env, double fuelLevel, String agentName) {
         super(xpos,ypos,env,fuelLevel);
         this.planner= new AstarPathGenerator(env, this, 100);
         this.target=null;
@@ -52,174 +37,135 @@ public class GreedyAgentCommMinDist extends TWAgent{
         friendPos = null;
         this.agentName = agentName;
     }
-
     
-    
+    @Override
     protected void sense(){
         super.sense();
         this.receiveMessage();
     }
 
     protected TWThought think() {
-//      getMemory().getClosestObjectInSensorRange(Tile.class);
         
         //to refuel the agent
         if(this.x==0 && this.y==0 && this.fuelLevel <= Parameters.defaultFuelLevel -1){
             return new TWThought(TWAction.REFUEL, null);
         }
-        
         TWTile tile = this.getMemory().getNearbyTile(x, y, threshold);
         TWHole hole = this.getMemory().getNearbyHole(x, y, threshold);
         
         //check fuel level
-        if(this.fuelLevel <= (this.x +this.y)*1.5 +10){
+        if(this.fuelLevel <= (this.x +this.y)*1.5 + 10){
             
             if( this.carriedTiles.size()>0 && hole!=null && this.sameLocation(hole)){
                 this.target=hole;
                 return new TWThought(TWAction.PUTDOWN, null);
             }
-            //this.getMemory().setTarget(0,0);
+            
             TWPath path = planner.findPath(x, y, 0,0);
             System.out.println(path.getStep(0).getX()+ ", " + path.getStep(0).getY() );
             return new TWThought(TWAction.MOVE, path.getStep(0).getDirection());
             
         }
+        /*If no carried tiles:
+            if no tile seen --> move randomly
+            else pickup tile
+        If one or more carried tiles:
+        */
         
-        //Maintain minimum distance
-        if (friendPos!= null){
-            //add picking up and putting down tile
-            int dist = Math.abs(friendPos[0] - this.getX()) + Math.abs(friendPos[1] - this.getY());
-            if(dist<=30)
-                return new TWThought(TWAction.MOVE, this.getAwayDirection());
-        }
-        
-        
-        
-        //
-        
+        TWPath path=null;
         if(this.carriedTiles.isEmpty()){
             //to check the steps needed to reach a tile
             if(tile==null){
-                //this.getMemory().noTarget();
+                //no tile around in its memory
+                System.out.println("No carried tiles, no tiles in memory");
                 return new TWThought(TWAction.MOVE, getStepDirection());                
             }
-            
+            //tile seen in memory
             else{
-           
-            //no tile around in its memory
                 if(this.sameLocation(tile)){
                     this.target = tile;
-                    //this.getMemory().noTarget();
+                    System.out.println("no carried tiles- tile at same location- pickup");
                     return new TWThought(TWAction.PICKUP, null);
                 }
                 else{
-                
-                 //this.getMemory().setTarget(tile.getX(), tile.getY());
-                 TWPath path = planner.findPath(x, y, tile.getX(), tile.getY());
+                 
+                 path = planner.findPath(x, y, tile.getX(), tile.getY());
+                 System.out.println("no carried tiles- tile seen in memory");
                  return new TWThought(TWAction.MOVE, path.getStep(0).getDirection());
-                
-                }//the the agent is not empty handed
+                }
+            }  
+        }else if(this.carriedTiles.size() < 3){
+            if(tile==null){
+                if(hole!=null){
+                    if(this.sameLocation(hole)){
+                        this.target = hole;
+                        System.out.println("carried tiles < 3 - tile=null, hole!=null");
+                        return new TWThought(TWAction.PUTDOWN, null);
+                    }
+                   else{
+                        path = planner.findPath(x, y, hole.getX(), hole.getY());
+                        System.out.println("carried tiles < 3 - tile=null, hole=null");
+                    }   
+                }
+                else{
+                    System.out.println("carried tiles < 3 -- no tile or hole found");
+                    return new TWThought(TWAction.MOVE, this.getStepDirection());
+                }
             }
-        
-            
-            
-        //agent has more than one tile
-        }else{
-            
-            
-            TWPath path=null;
-            if(hole==null){
-                    if(tile!=null && this.carriedTiles.size() < 3){
-                        if(this.sameLocation(tile)){
-                            this.target=tile;
-                            return new TWThought(TWAction.PICKUP, null);
+            else{
+                if(this.sameLocation(tile)){
+                    this.target = tile;
+                    System.out.println("carried tiles < 3 - tile at same location- pickup");
+                    return new TWThought(TWAction.PICKUP, null);
+                }
+                else{
+                    if(hole!=null){
+                        if(this.sameLocation(hole)){
+                            this.target = hole;
+                            System.out.println("carried tiles < 3 - hole at same location- putdown");
+                            return new TWThought(TWAction.PUTDOWN, null);
                         }
-                        //this.getMemory().setTarget(tile.getX(), tile.getY());
-                        System.out.println("more than one tile 1");
-                        path = planner.findPath(x, y, tile.getX(), tile.getY());
+                        else{
+                            TWPath pathToHole = planner.findPath(x, y, hole.getX(), hole.getY());
+                            TWPath pathToTile = planner.findPath(x, y, tile.getX(), tile.getY());
+                            if(pathToHole.getpath().size() < pathToTile.getpath().size()){
+                                System.out.println("carried tiles < 3 - Found tile and hole- going for the hole");
+                                this.target = hole;
+                                path = pathToHole;
+                            }
+                            else{
+                                System.out.println("carried tiles < 3 - Found tile and hole- going for the tile");
+                                this.target = tile;
+                                path = pathToTile;
+                            } 
+                        }
                     }
                     else{
-                        return new TWThought(TWAction.MOVE, getStepDirection());
-                    }
+                        
+                        path = planner.findPath(x, y, tile.getX(), tile.getY());
+                        System.out.println("carried tiles < 3 - tile found, no hole");
+                        return new TWThought(TWAction.MOVE, path.getStep(0).getDirection());
+                    } 
                 }
-            
-            else{
-                if(this.sameLocation(hole)){
-                    this.target = hole;
-                    //this.getMemory().noTarget();
-                    return new TWThought(TWAction.PUTDOWN, null);
-                }
-                
-                else{
-                    //this.getMemory().setTarget(hole.getX(), hole.getY());
-                    System.out.println("more than one tile 2");
-                    path = planner.findPath(x, y, hole.getX(), hole.getY());
-                }
-                
-            }
-            System.out.println(path.getStep(0).getDirection());
-            return new TWThought(TWAction.MOVE, path.getStep(0).getDirection());
-           /* if(tile == null && hole == null){
-                this.getMemory().noTarget();
-                return new TWThought(TWAction.MOVE, getStepDirection());
             } 
-            if(tile != null && hole == null){
-                if(this.sameLocation(tile)){
-                    this.target = tile;
-                    this.getMemory().noTarget();
-                    return new TWThought(TWAction.PICKUP, null);
-                }else{
-                    this.getMemory().setTarget(tile.getX(), tile.getY());
-                    path = planner.findPath(x, y, tile.getX(), tile.getY());
-                }
-            }
-            if(tile == null && hole != null){
-                if(this.sameLocation(hole)){
-                    this.target = hole;
-                    this.getMemory().noTarget();
-                    return new TWThought(TWAction.PUTDOWN, null);
-                }else{
-                    this.getMemory().setTarget(hole.getX(), hole.getY());
-                    path = planner.findPath(x, y, hole.getX(), hole.getY());
-                }
-            }
-            if(tile != null && hole != null){
-                if(this.sameLocation(tile)){
-                    this.target = tile;
-                    this.getMemory().noTarget();
-                    return new TWThought(TWAction.PICKUP,null);
-                }
-                
-                if(this.sameLocation(hole)){
-                    this.target = hole;
-                    this.getMemory().noTarget();
-                    return new TWThought(TWAction.PUTDOWN,null);
-            
-                }
-                
-                
-            }*/
-            
-            
-            
         }
-        /*else{ //the agent carries 3 tiles
-            TWHole hole = this.getMemory().getNearbyHole(x, y, Step_to_Hole);
-            if(hole==null){
-                this.getMemory().noTarget();
-                return new TWThought(TWAction.MOVE, getStepDirection());
-            }else{
+        else{
+            if(hole!=null){
                 if(this.sameLocation(hole)){
-                    this.target=hole;
-                    this.getMemory().noTarget();
+                    System.out.println("carried tiles = 3 --- hole in same location");
+                    this.target = hole;
                     return new TWThought(TWAction.PUTDOWN, null);
-                }else{
-                    this.getMemory().setTarget(hole.getX(), hole.getY());
-                    TWPath path = planner.findPath(x, y, hole.getX(), hole.getY());
-                    return new TWThought(TWAction.MOVE, path.getStep(0).getDirection());
+                }
+                else{
+                    path = planner.findPath(x, y, hole.getX(), hole.getY());
+                    System.out.println("carried tiles = 3 --- hole seen");
                 }
             }
-        } */              
+            else
+                return new TWThought(TWAction.MOVE, getStepDirection());
+        }
+
+        return new TWThought(TWAction.MOVE, path.getStep(0).getDirection());
     }
     
     //decide the the step direction
@@ -240,43 +186,6 @@ public class GreedyAgentCommMinDist extends TWAgent{
        return randomDir;
 
     }
-    
-    
-    private TWDirection getAwayDirection(){
-
-        //TWDirection randomDir = TWDirection.values()[this.getEnvironment().random.nextInt(5)];
-        if (friendPos==null)
-            return this.getRandomDirection();
-        
-        TWDirection[] awayDir = new TWDirection[2];
-        
-        if (this.getX()> this.friendPos[0])
-            awayDir[0] = TWDirection.E;
-        else
-            awayDir[0] = TWDirection.W;
-        
-        if(this.getY()> this.friendPos[1])
-            awayDir[1] = TWDirection.S;
-        else
-            awayDir[1] = TWDirection.N;
-        
-        TWDirection awayDirection = awayDir[(int)(Math.random() * awayDir.length)];
-        
-
-        if(this.getX()>=this.getEnvironment().getxDimension() ){
-            awayDirection = TWDirection.W;
-        }else if(this.getX()<=1 ){
-            awayDirection = TWDirection.E;
-        }else if(this.getY()<=1 ){
-            awayDirection = TWDirection.S;
-        }else if(this.getY()>=this.getEnvironment().getxDimension() ){
-            awayDirection = TWDirection.N;
-        }
-        
-
-       return awayDirection;
-
-    }
   
     @Override
     protected void act(TWThought thought) {
@@ -286,7 +195,6 @@ public class GreedyAgentCommMinDist extends TWAgent{
         //pickUpTile(Tile)
         //putTileInHole(Hole)
         //refuel()
-        
         
         switch(thought.getAction()){
             case MOVE : 
@@ -301,12 +209,13 @@ public class GreedyAgentCommMinDist extends TWAgent{
             case PICKUP:
                 pickUpTile((TWTile)this.target);
                 memory.removeAgentPercept(this.target.getX(), this.target.getY());
-                memory.getMemoryGrid().set(this.target.getX(), this.target.getY(), null);
+                memory.getMemoryGrid().set(this.target.getX() , this.target.getY(), null);
                 break;
+            
             case PUTDOWN:
                 putTileInHole((TWHole)this.target);
                 memory.removeAgentPercept(this.target.getX(), this.target.getY());
-                memory.getMemoryGrid().set(this.target.getX(), this.target.getY(), null);
+                memory.getMemoryGrid().set(this.target.getX() , this.target.getY(), null);
                 break;
                 
             case REFUEL:
@@ -319,13 +228,26 @@ public class GreedyAgentCommMinDist extends TWAgent{
 
         
     }
+
+
+    private TWDirection getRandomDirection(){
+
+        TWDirection randomDir = TWDirection.values()[this.getEnvironment().random.nextInt(5)];
+
+        if(this.getX()>=this.getEnvironment().getxDimension() ){
+            randomDir = TWDirection.W;
+        }else if(this.getX()<=1 ){
+            randomDir = TWDirection.E;
+        }else if(this.getY()<=1 ){
+            randomDir = TWDirection.S;
+        }else if(this.getY()>=this.getEnvironment().getxDimension() ){
+            randomDir = TWDirection.N;
+        }
+
+       return randomDir;
+
+    }
     
-    /*
-    send message
-    1. current location
-    2. hole closest to the other
-    3. tile closest to the other
-    */
     private void sendMessage(){
         //Schedule schedule  = new Schedule();
         //private method?
@@ -409,28 +331,8 @@ public class GreedyAgentCommMinDist extends TWAgent{
     }
 
 
-    private TWDirection getRandomDirection(){
-
-        TWDirection randomDir = TWDirection.values()[this.getEnvironment().random.nextInt(5)];
-
-        if(this.getX()>=this.getEnvironment().getxDimension() ){
-            randomDir = TWDirection.W;
-        }else if(this.getX()<=1 ){
-            randomDir = TWDirection.E;
-        }else if(this.getY()<=1 ){
-            randomDir = TWDirection.S;
-        }else if(this.getY()>=this.getEnvironment().getxDimension() ){
-            randomDir = TWDirection.N;
-        }
-
-       return randomDir;
-
-    }
-
     @Override
     public String getName() {
         return this.agentName;
     }
-    
-    
 }

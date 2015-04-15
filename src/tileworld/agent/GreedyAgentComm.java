@@ -51,7 +51,6 @@ public class GreedyAgentComm extends TWAgent{
         this.messageSend = new Message();
         friendPos = null;
         this.agentName = agentName;
-        this.memory = new TWAgentWorkingMemory(this, env.schedule, env.getxDimension(), env.getyDimension());
     }
 
     
@@ -90,12 +89,12 @@ public class GreedyAgentComm extends TWAgent{
         
         
         
-        //Maintain minimum distance
+        /*Maintain minimum distance
         if (friendPos!= null){
             int dist = Math.abs(friendPos[0] - this.getX()) + Math.abs(friendPos[1] - this.getY());
             if(dist<=30)
                 return new TWThought(TWAction.MOVE, this.getAwayDirection());
-        }
+        }*/
         
         
         //
