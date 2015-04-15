@@ -27,7 +27,7 @@ public class EVCommunicator {
         }
     }
     
-    public static Object get(String toAgent){
+    public static EVMessage get(String toAgent){
         char c = toAgent.charAt(0);
         switch(c){
             case 'F': return MessageFromSecond;
