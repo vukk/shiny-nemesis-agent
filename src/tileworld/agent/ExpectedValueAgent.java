@@ -41,10 +41,12 @@ public class ExpectedValueAgent extends TWAgent{
     private final int INF=1000000000; // 10^9 a number big enough so that it will never be reached, yet it fits in a 32 bit int.
     private final double fuelSafety=20; //The level of safety the agent has to determine where to go.
     private boolean didSomething;
+    private TWAgentBoundingMemoryComm bmemory;
     
     public ExpectedValueAgent(int xpos, int ypos, TWEnvironment env, double fuelLevel, String ID) {
         super(xpos,ypos,env,fuelLevel);
         this.memory = new TWAgentBoundingMemoryComm(this, env.schedule, env.getxDimension(), env.getyDimension(), ID);
+        this.bmemory = (TWAgentBoundingMemoryComm) this.memory;
         this.ID=ID;
     }
 
@@ -57,8 +59,8 @@ public class ExpectedValueAgent extends TWAgent{
         if(this.fuelLevel==0) {
             return new TWThought(TWAction.MOVE,TWDirection.Z);
         }
-        if(this.memory.objects[x][y]==null) return new TWThought(TWAction.MOVE,getSmartDirection());
-        TWObject o = (TWObject) this.memory.objects[x][y].getO();//get mem object
+        if(this.bmemory.objects[x][y]==null) return new TWThought(TWAction.MOVE,getSmartDirection());
+        TWObject o = (TWObject) this.bmemory.objects[x][y].getO();//get mem object
         if(this.carriedTiles.size()<3 && TWTile.class.isInstance(o)) { //If its standing on a tile and can pick it up
             return new TWThought(TWAction.PICKUP,TWDirection.Z);
         }
@@ -77,11 +79,11 @@ public class ExpectedValueAgent extends TWAgent{
                 this.move(thought.getDirection());
                 break;
             case PICKUP:
-                pickUpTile((TWTile) this.memory.objects[x][y].getO());
+                pickUpTile((TWTile) this.bmemory.objects[x][y].getO());
                 memory.removeAgentPercept(x,y);
                 break;
             case PUTDOWN:
-                putTileInHole((TWHole) this.memory.objects[x][y].getO());
+                putTileInHole((TWHole) this.bmemory.objects[x][y].getO());
                 memory.removeAgentPercept(x, y);
                 break;
             case REFUEL:
@@ -104,21 +106,21 @@ public class ExpectedValueAgent extends TWAgent{
     }
     
     private boolean validPos(int row, int col) {
-        return row>=0&&row<Parameters.yDimension&&col>=0&&col<Parameters.xDimension&&!this.memory.isCellBlocked(col, row);
+        return row>=0&&row<Parameters.yDimension&&col>=0&&col<Parameters.xDimension&&!this.bmemory.isCellBlocked(col, row);
     }
     
     private double getExpected(int row, int col, int dist) {
         double ret=0.0;
-        int currentTime=(int)Math.round(this.memory.getSimulationTime());
-        if(this.memory.objects[col][row]==null) { //Empty square
-            int lastVisited=(int)((TWAgentBoundingMemory)this.memory).getObservedTimeGrid()[col][row];
+        int currentTime=(int)Math.round(this.bmemory.getSimulationTime());
+        if(this.bmemory.objects[col][row]==null) { //Empty square
+            int lastVisited=(int)(this.bmemory).getObservedTimeGrid()[col][row];
             ret=1.0-expected[currentTime-lastVisited]; //The inverse since these are the probabilities of it being empty when the agent reaches it.
             if(this.carriedTiles.size()>=3 || this.carriedTiles.isEmpty()) {
                 ret/=2.0;
             }
         }
         else {
-            TWObject o =(TWObject) this.memory.objects[col][row].getO();//get mem object
+            TWObject o =(TWObject) this.bmemory.objects[col][row].getO();//get mem object
             if((this.carriedTiles.size()<3 && TWTile.class.isInstance(o)) || (this.carriedTiles.size()>0 && TWHole.class.isInstance(o))) {
                 ret = 1.0;
             }
@@ -137,7 +139,7 @@ public class ExpectedValueAgent extends TWAgent{
              }
         }
         
-        lifeTime=(((TWAgentBoundingMemory)this.memory).getLifetimeMaxBound()+((TWAgentBoundingMemory)this.memory).getLifetimeMinBound())/2;
+        lifeTime=(this.bmemory.getLifetimeMaxBound()+this.bmemory.getLifetimeMinBound())/2;
         
         
         /*
