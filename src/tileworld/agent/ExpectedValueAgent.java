@@ -51,6 +51,19 @@ public class ExpectedValueAgent extends TWAgent{
         this.memory = new TWAgentBoundingMemoryComm(this, env.schedule, env.getxDimension(), env.getyDimension(), ID);
         this.bmemory = (TWAgentBoundingMemoryComm) this.memory;
         this.ID=ID;
+        this.message=null;
+    }
+    
+    @Override
+    protected void sense() {
+        // The first thing to do is to receive messages and update the state
+        // according to that!
+        message = EVCommunicator.get(this.getName());
+        if(message != null && message.destroy) {
+            //System.out.println(agentCommTag+" RecvMsg loc: " + msg.x + ", " + msg.y + ", destroy: " + msg.destroy);
+            this.bmemory.removeAgentPercept(message.x, message.y);
+        }
+        sensor.sense();
     }
 
     protected TWThought think() {
@@ -99,10 +112,7 @@ public class ExpectedValueAgent extends TWAgent{
         }  catch (CellBlockedException ex) {
 
            // Cell is blocked, replan?
-        }
-        
-        int opportunities = Math.min(this.getEnvironment().countCreatedHoles, this.getEnvironment().countCreatedTiles);
-        
+        }        
     }
     
     private class Position { // TODO: Move to its own file, or not, it doesn't really matter
@@ -119,7 +129,6 @@ public class ExpectedValueAgent extends TWAgent{
     
     private double getExpected(int row, int col, int dist) {
         double ret=0.0;
-        double sumP=this.bmemory.tileMean+this.bmemory.holeMean;
         int currentTime=(int)Math.round(this.bmemory.getSimulationTime());
         ret=0;
         if(this.bmemory.objects[col][row]==null) { //Empty square
@@ -139,6 +148,9 @@ public class ExpectedValueAgent extends TWAgent{
             if((this.carriedTiles.size()>0 && TWHole.class.isInstance(o))) {
                 ret = 1.0;
             }
+        }
+        if(message!=null) {
+            ret*=(1.0-1.0/Math.pow(Math.abs(message.x-col) + Math.abs(message.y-row) + 1, 2));
         }
         return ret/Math.pow(dist,2); //Change from 1 to 2, and let the one that shows better results
     }
@@ -232,7 +244,7 @@ public class ExpectedValueAgent extends TWAgent{
         }
         average/=movesAvailable;
         
-        fuelSafety=3*bestFuel*bmemory.haxO/(25*bmemory.getSimulationTime());
+        fuelSafety=3*bestFuel*bmemory.countObstacle/(bmemory.explored);
         
         System.out.println(ID+" Fuel Safety: "+fuelSafety);
         //If the Agent can't reach the refueling (it knows the path is blocked), then make sure there is enough fuel, otherwise dont move.
@@ -244,7 +256,7 @@ public class ExpectedValueAgent extends TWAgent{
         
         // Check if the agent should go refuel
         if(Parameters.endTime-this.bmemory.getSimulationTime()<=fuelLevel);
-        else if(fuelLevel<fuelSafetyHardLimit||fuelLevel<=fuelSafety||maxExpected<average*(bestFuel+fuelSafety)/(fuelLevel-fuelSafety)) { 
+        else if(fuelLevel<fuelSafetyHardLimit||fuelLevel<=fuelSafety||maxExpected<average*(bestFuel+fuelSafetyHardLimit)/(fuelLevel-fuelSafety)) { 
             dir=bestFuelId;
         }
         

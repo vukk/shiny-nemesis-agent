@@ -60,9 +60,6 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
     protected double tileMean = 0;
     protected double holeMean = 0;
     protected double obstacleMean = 0;
-    
-    public double haxO = 0;
-    
 
     // Stores turn when a square was last observed. 0 means not observed.
     protected long[][] observed;
@@ -96,22 +93,6 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
      * @param agentYCoords bag containing y coordinates of agents
      */
     public void updateMemory(Bag sensedObjects, IntBag objectXCoords, IntBag objectYCoords, Bag sensedAgents, IntBag agentXCoords, IntBag agentYCoords) {
-        // The first thing to do is to receive messages and update the state
-        // according to that!
-        EVMessage msg = EVCommunicator.get(this.agentCommTag);
-        // 
-        /*
-        if(msg == null) {
-            System.out.println(agentCommTag+" RCVMSG is null");
-        }
-        if(msg != null && !msg.destroy) {
-            System.out.println(agentCommTag+" RCVMSG set but destroy false");
-        }*/
-        if(msg != null && msg.destroy) {
-            //System.out.println(agentCommTag+" RecvMsg loc: " + msg.x + ", " + msg.y + ", destroy: " + msg.destroy);
-            this.removeAgentPercept(msg.x, msg.y);
-        }
-
         // Reset the closest objects for new iteration of the loop (this is short
         // term observation memory if you like) It only lasts one timestep
         closestInSensorRange = new HashMap<Class<?>, TWEntity>(4);
@@ -123,7 +104,7 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
         // anything suspicious
         int sensorGridSize = 2 * Parameters.defaultSensorRange + 1;
         TWEntity[][] grid = new TWEntity[sensorGridSize][sensorGridSize];
-
+        
         // Loop all sensed entities to the grid
         for (int i = 0; i < sensedObjects.size(); i++) {
             TWEntity o = (TWEntity) sensedObjects.get(i);
@@ -137,10 +118,12 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
             int gridX = objectXCoords.get(i) - me.getX() + Parameters.defaultSensorRange;
             int gridY = objectYCoords.get(i) - me.getY() + Parameters.defaultSensorRange;
             
-            // MORE HAX
             if(o instanceof TWObstacle)
-                haxO++;
-            // END HAX
+                countObstacle++;
+            if(o instanceof TWTile)
+                countTile++;
+            if(o instanceof TWHole)
+                countHole++;
 
             grid[gridX][gridY] = o;
         }
@@ -157,6 +140,7 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
                 if (!me.getEnvironment().isInBounds(envX, envY)) {
                     continue;
                 }
+                explored++;
 
                 TWEntity objSensed = grid[i][j];
                 TWAgentPercept inMem = objects[envX][envY];
@@ -166,20 +150,12 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
                 // Handle different cases
                 if (objSensed == null && inMem == null) {
                     // No need to change.
-                    this.explored++; // for means
                     //System.out.println("no change");
                 } else if (objSensed != null) {
                     //System.out.println("obj sensed not null");
                     if (inMem == null) {
                         //System.out.println("new entity found");
                         // New entity found
-                        // for means
-                        if(objSensed instanceof TWTile)
-                            this.countTile++;
-                        else if(objSensed instanceof TWHole)
-                            this.countHole++;
-                        else if(objSensed instanceof TWObstacle)
-                            this.countObstacle++;
                         // for means end
                         this.memorySize++;
                         // Set obj
@@ -189,15 +165,6 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
                     } else if (objSensed.getClass() != inMem.getO().getClass()) {
                         //System.out.println("entity changed");
                         // The entity has changed!
-                        // for means
-                        this.explored++;
-                        if(objSensed instanceof TWTile)
-                            this.countTile++;
-                        else if(objSensed instanceof TWHole)
-                            this.countHole++;
-                        else if(objSensed instanceof TWObstacle)
-                            this.countObstacle++;
-                        // for means end
                         // Update bounds
                         checkMaxBound(envX, envY, inMem);
                         // Set obj
@@ -243,7 +210,7 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
         
         //System.out.println("tc: "+countTile+" hc: "+countHole+" oc: "+countObstacle);
         //System.out.println("explored: "+explored+" alt: "+this.approxLifetime());
-        System.out.println("tile: "+tileMean+" hole: "+holeMean+" obstacle: "+obstacleMean);
+        System.out.println(agentCommTag+" tile: "+tileMean+" hole: "+holeMean+" obstacle: "+obstacleMean);
 
         this.decayMemoryByBound();
 

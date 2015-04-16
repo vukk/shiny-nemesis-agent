@@ -41,7 +41,7 @@ public class Parameters {
     public static final int lifeTime = 100;
     */
     // e2
-    /*
+    
     //Agent Parameters
     public static final int defaultFuelLevel = 1000;
     public static final int defaultSensorRange = 3;
@@ -57,8 +57,9 @@ public class Parameters {
     public static final double holeDev = 0.5f;
     public static final double obstacleDev = 0.5f;
     public static final int lifeTime = 30;
-    */
+    
     // e3
+    /*
     //Agent Parameters
     public static final int defaultFuelLevel = 1200;
     public static final int defaultSensorRange = 3;
@@ -74,4 +75,5 @@ public class Parameters {
     public static final double holeDev = 0.002f;
     public static final double obstacleDev = 0.2f;
     public static final int lifeTime = 200;
+    */
 }
