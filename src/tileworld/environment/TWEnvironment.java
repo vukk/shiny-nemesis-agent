@@ -57,6 +57,7 @@ public class TWEnvironment extends SimState implements Steppable {
     private TWFuelStation fuelingStation;
     
     
+    public Bag agents = new Bag();
     public int countCreatedTiles = 0;
     public int countCreatedHoles = 0;
             
@@ -100,14 +101,25 @@ public class TWEnvironment extends SimState implements Steppable {
 
         //Now we create some agents
         //createAgent(new SimpleTWAgent(0, 0, this, Parameters.defaultFuelLevel),2);
+        
         //createAgent(new TWGreedySimpleAgent(0, 0, this, Parameters.defaultFuelLevel),2);
+        //createAgent(new TWGreedySimpleAgent(1, 1, this, Parameters.defaultFuelLevel),3);
+        
         //createAgent(new FirstTWAgent(0, 0, this, Parameters.defaultFuelLevel),2);
         //createAgent(new TestTWAgent(0, 0, this, Parameters.defaultFuelLevel), 2);
         //createAgent(new TWAgentOrange(0, 0, this, Parameters.defaultFuelLevel), 2);
+        
         createAgent(new ExpectedValueAgent(0, 0, this, Parameters.defaultFuelLevel, "First"), 2);
         createAgent(new ExpectedValueAgent(1, 1, this, Parameters.defaultFuelLevel, "Second"), 3);
+        
         //createAgent(new TWAgentOrange(0, 0, this, Parameters.defaultFuelLevel), 2);
-        //createAgent(new TWAgentOrange(1, 1, this, Parameters.defaultFuelLevel), 2);
+        //createAgent(new TWAgentOrange(1, 1, this, Parameters.defaultFuelLevel), 3);
+        
+        //createAgent(new TWAgentOrangeTwo(0, 0, this, Parameters.defaultFuelLevel, "First"), 2);
+        //createAgent(new TWAgentOrangeTwo(1, 1, this, Parameters.defaultFuelLevel, "Second"), 3);
+        
+        //createAgent(new TWAgentOrangeThree(0, 0, this, Parameters.defaultFuelLevel, "First"), 2);
+        //createAgent(new TWAgentOrangeThree(1, 1, this, Parameters.defaultFuelLevel, "Second"), 3);
 
 //      createAgent(new VaisaghAgent(1, 1, this, Parameters.defaultFuelLevel),3);
 //        
@@ -166,6 +178,15 @@ public class TWEnvironment extends SimState implements Steppable {
     }
 
     public void step(SimState state) {
+        // output performance
+        double agentScores = 0;
+        for(Object a : agents) {
+            TWAgent ag = (TWAgent) a;
+            agentScores += ag.getScore();
+        }
+        double opportunities = Math.min(countCreatedTiles, countCreatedHoles);
+        System.out.println("Performance: " + agentScores/opportunities);
+        
         double time = state.schedule.getTime();
         // create new objects
         createTWObjects(time);
@@ -357,6 +378,7 @@ public class TWEnvironment extends SimState implements Steppable {
         if (TWGUI.instance != null) {
             TWGUI.instance.addMemoryPortrayal(a);
         }
+        agents.add(a);
     }
 
 }

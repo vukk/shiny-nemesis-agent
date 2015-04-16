@@ -128,7 +128,7 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
             grid[gridX][gridY] = o;
         }
 
-        //System.out.println("updating mem of " + agentCommTag + ", size " + memorySize + " low " + boundMin + " hi " + boundMax + " approx " + (long) Math.round((boundMax + 9 * boundMin) / 10.0) + " step " + this.getSimulationTime());
+        System.out.println("updating mem of " + agentCommTag + ", size " + memorySize + " low " + boundMin + " hi " + boundMax + " approx " + (long) Math.round((boundMax + 9 * boundMin) / 10.0) + " step " + this.getSimulationTime());
 
         // Loop over grids to notice differences
         for (int i = 0; i < sensorGridSize; i++) {

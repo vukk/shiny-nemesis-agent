@@ -16,9 +16,12 @@ public class EVMessage {
     
     public boolean destroy;
     
-    public EVMessage(int xx, int yy, boolean dd) { // x location, y location, destroyed memory
+    public long turn;
+    
+    public EVMessage(int xx, int yy, boolean dd, long tturn) { // x location, y location, destroyed memory
         x=xx;
         y=yy;
         destroy=dd;
+        turn=tturn;
     }   
 }

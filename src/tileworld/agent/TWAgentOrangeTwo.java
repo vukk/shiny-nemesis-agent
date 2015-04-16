@@ -34,25 +34,27 @@ import tileworld.planners.TWPathStep;
 public class TWAgentOrangeTwo extends ExpectedValueAgent {
     
     protected AstarPathGenerator astar;
-    protected TWAgentBoundingMemory bmem;
+    //protected TWAgentBoundingMemoryComm bmemory;
     protected TWPath curPlan;
     protected int curPlanLvl;
     protected TWAgent simulatedAgent;
     protected TWEntity target;
+    protected String agentCommTag;
 
     //protected TWAgentBoundingMemory memory;
     public TWAgentOrangeTwo(int xpos, int ypos, TWEnvironment env, double fuelLevel, String agentCommTag) {
         super(xpos, ypos, env, fuelLevel, agentCommTag);
         System.out.println("Initializing memory");
         //this.memory = new TWAgentWorkingMemory(this, env.schedule, env.getxDimension(), env.getyDimension());
-        this.memory = new TWAgentBoundingMemory(this, env.schedule, env.getxDimension(), env.getyDimension());
+        //this.memory = new TWAgentBoundingMemory(this, env.schedule, env.getxDimension(), env.getyDimension());
         //this.bmem = (TWAgentBoundingMemory) this.memory;
-        System.out.println("Memory initialized");
+        //System.out.println("Memory initialized");
         // limit is corner to corner plus around 20% extra
         int astarLimit = Parameters.xDimension + Parameters.yDimension;
         astarLimit = (int) Math.ceil(astarLimit*1.2);
         this.astar = new AstarPathGenerator(env, this, astarLimit);
         this.curPlanLvl = Integer.MAX_VALUE;
+        this.agentCommTag = agentCommTag;
     }
 
     @Override
@@ -82,17 +84,17 @@ public class TWAgentOrangeTwo extends ExpectedValueAgent {
             return new TWThought(TWAction.PICKUP, null);
         }
         
-        // lvl1, fuel
+        /*// lvl1, fuel
         if (curPlanLvl == 1)
             return new TWThought(TWAction.MOVE, curPlan.popNext().getDirection());
         if (this.fuelLevel <= (this.x + this.y) * 1.5 + 10) {
             curPlan = astar.findPath(x, y, 0, 0);
             curPlanLvl = 1;
             return new TWThought(TWAction.MOVE, curPlan.popNext().getDirection());
-        }
+        }*/
         
         // lvl2, greedy
-        if (this.approxLifetime() <= 35) {
+        if (this.bmemory.approxLifetime() <= 35) {
             return this.greedyThink();
         }
         
@@ -101,11 +103,6 @@ public class TWAgentOrangeTwo extends ExpectedValueAgent {
         
         // lvlX, just for development
         //return new TWThought(TWAction.MOVE, getRandomDirection());
-    }
-    
-    // here because for each agent the best approximation could be different
-    private long approxLifetime() {
-        return (long) Math.round((this.bmem.getLifetimeMaxBound() + 9 * this.bmem.getLifetimeMinBound()) / 10.0);
     }
 
     @Override
@@ -167,7 +164,7 @@ public class TWAgentOrangeTwo extends ExpectedValueAgent {
 
     @Override
     public String getName() {
-        return "Agent Orange"; // so politically incorrect?
+        return agentCommTag+" Agent Orange Two"; // so politically incorrect?
     }
     
     

@@ -44,7 +44,7 @@ public class ExpectedValueAgent extends TWAgent{
     private double fuelSafety; //The level of safety the agent has to determine where to go.
     private final double fuelSafetyHardLimit=20; // if the fuel reaches this level, we will go straight to the refueling station
     private boolean didSomething;
-    private TWAgentBoundingMemoryComm bmemory;
+    protected TWAgentBoundingMemoryComm bmemory;
     
     public ExpectedValueAgent(int xpos, int ypos, TWEnvironment env, double fuelLevel, String ID) {
         super(xpos,ypos,env,fuelLevel);
@@ -112,7 +112,7 @@ public class ExpectedValueAgent extends TWAgent{
         }  catch (CellBlockedException ex) {
 
            // Cell is blocked, replan?
-        }        
+        }
     }
     
     private class Position { // TODO: Move to its own file, or not, it doesn't really matter
@@ -248,11 +248,10 @@ public class ExpectedValueAgent extends TWAgent{
         
         System.out.println(ID+" Fuel Safety: "+fuelSafety);
         //If the Agent can't reach the refueling (it knows the path is blocked), then make sure there is enough fuel, otherwise dont move.
-        if(bestFuel==INF && this.x+this.y+fuelSafety <fuelLevel) {
+        if(bestFuel==INF) {
             bestFuel=0;
             fuelSafety=0;
         }
-        
         
         // Check if the agent should go refuel
         if(Parameters.endTime-this.bmemory.getSimulationTime()<=fuelLevel);
@@ -284,7 +283,7 @@ public class ExpectedValueAgent extends TWAgent{
     }
 
     private void sendMessage() {
-        this.message = new EVMessage(x, y, didSomething);
+        this.message = new EVMessage(x, y, didSomething, (long)this.bmemory.getSimulationTime());
         EVCommunicator.put(getName(), this.message);
     }
     
