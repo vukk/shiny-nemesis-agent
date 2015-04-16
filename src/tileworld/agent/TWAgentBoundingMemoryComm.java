@@ -99,6 +99,12 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
         // The first thing to do is to receive messages and update the state
         // according to that!
         EVMessage msg = EVCommunicator.get(this.agentCommTag);
+        
+        
+        // Helper grid, could just copy from environment but let's not do
+        // anything suspicious
+        int sensorGridSize = 2 * Parameters.defaultSensorRange + 1;
+        
         // 
         /*
         if(msg == null) {
@@ -111,6 +117,20 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
             //System.out.println(agentCommTag+" RecvMsg loc: " + msg.x + ", " + msg.y + ", destroy: " + msg.destroy);
             this.removeAgentPercept(msg.x, msg.y);
         }
+        
+        if(msg != null) {
+            // Loop over grids to notice differences
+            for (int i = 0; i < sensorGridSize; i++) {
+                for (int j = 0; j < sensorGridSize; j++) {
+                    int eX = msg.x - Parameters.defaultSensorRange + i;
+                    int eY = msg.y - Parameters.defaultSensorRange + j;
+                    // If not in bounds, skip
+                    if (!me.getEnvironment().isInBounds(eX, eY))
+                        continue;
+                    observed[eX][eY] = msg.turn;
+                }
+            }
+        }
 
         // Reset the closest objects for new iteration of the loop (this is short
         // term observation memory if you like) It only lasts one timestep
@@ -121,7 +141,6 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
 
         // Helper grid, could just copy from environment but let's not do
         // anything suspicious
-        int sensorGridSize = 2 * Parameters.defaultSensorRange + 1;
         TWEntity[][] grid = new TWEntity[sensorGridSize][sensorGridSize];
 
         // Loop all sensed entities to the grid
@@ -145,7 +164,7 @@ public class TWAgentBoundingMemoryComm extends TWAgentWorkingMemory {
             grid[gridX][gridY] = o;
         }
 
-        //System.out.println("updating mem of " + agentCommTag + ", size " + memorySize + " low " + boundMin + " hi " + boundMax + " approx " + (long) Math.round((boundMax + 9 * boundMin) / 10.0) + " step " + this.getSimulationTime());
+        System.out.println("updating mem of " + agentCommTag + ", size " + memorySize + " low " + boundMin + " hi " + boundMax + " approx " + (long) Math.round((boundMax + 9 * boundMin) / 10.0) + " step " + this.getSimulationTime());
 
         // Loop over grids to notice differences
         for (int i = 0; i < sensorGridSize; i++) {

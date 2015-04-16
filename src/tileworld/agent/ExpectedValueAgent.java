@@ -269,7 +269,7 @@ public class ExpectedValueAgent extends TWAgent{
     }
 
     private void sendMessage() {
-        this.message = new EVMessage(x, y, didSomething);
+        this.message = new EVMessage(x, y, didSomething, (long)this.bmemory.getSimulationTime());
         EVCommunicator.put(getName(), this.message);
     }
     
